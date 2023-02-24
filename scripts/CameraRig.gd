@@ -8,6 +8,7 @@ extends Marker3D
 @export var cam_lerp = 7.0
 @export var rotation_speed = 2
 @export var tilt_speed = 1
+@export var inverted = false
 
 var target = null
 
@@ -30,11 +31,18 @@ func _process(delta):
 		rotation_y.y += 1
 	if Input.is_action_pressed("Look_Right"):
 		rotation_y.y -= 1
+	if inverted:
+		if Input.is_action_pressed("Look_Up"):
+			rotation_x.x += 1
+		if Input.is_action_pressed("Look_Down"):
+			rotation_x.x -= 1
+	else:
+		if Input.is_action_pressed("Look_Up"):
+			rotation_x.x -= 1
+		if Input.is_action_pressed("Look_Down"):
+			rotation_x.x += 1
 	
-	if Input.is_action_pressed("Look_Up"):
-		rotation_x.x += 1
-	if Input.is_action_pressed("Look_Down"):
-		rotation_x.x -= 1
+	
 	
 	if rotation_y != Vector3.ZERO:
 		rotation_y = rotation_y.normalized()

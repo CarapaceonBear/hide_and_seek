@@ -5,18 +5,23 @@ extends CharacterBody3D
 
 @export var walk_speed = 3
 @export var run_speed = 4
-@export var max_speed = 20
-@export var run_acceleration = 0.2
+@export var max_speed = 14
+@export var run_acceleration = 0.3
 var run_accumulation = 0
 @onready var accumulation_cap = max_speed - run_speed
-@export var fall_acceleration = 75
+@export var fall_acceleration = 65
 @export var walk_dead_zone = 0.2
 @export var run_dead_zone = 0.6
 
 var direction = Vector3.ZERO
 var stick_direction = Vector2(0,-1)
 var target_velocity = Vector3.ZERO
-@export var jump_impulse = 20
+
+@export var jump_impulse = 24
+@export var jump_buffer = 0.2
+@onready var timer_jump_buffer = $JumpBuffer
+@export var coyote_time = 0.5
+@onready var timer_coyote_time = $CoyoteTime
 
 @export var camera_path : NodePath
 var camera = null
@@ -48,6 +53,8 @@ enum States {
 func _ready():
 	if camera_path:
 		camera = get_node(camera_path)
+	timer_jump_buffer.wait_time = jump_buffer
+	timer_coyote_time.wait_time = coyote_time
 
 
 func _physics_process(delta):
@@ -69,7 +76,7 @@ func _physics_process(delta):
 				else:
 					state = States.RUN
 			if Input.is_action_just_pressed("Jump"):
-				target_velocity.y = jump_impulse
+				jump()
 			if not is_on_floor():
 				state = States.FALL
 			velocity = target_velocity
@@ -98,7 +105,12 @@ func _physics_process(delta):
 				state = States.IDLE
 			elif stick_direction.length() > run_dead_zone:
 				state = States.RUN
-			
+			if Input.is_action_just_pressed("Jump"):
+				jump()
+			# TEMPORARY - SHOULD WALK INTO LEDGE GRAB
+			if not is_on_floor():
+				timer_coyote_time.start()
+				state = States.FALL
 			velocity = target_velocity
 			move_and_slide()
 		States.RUN:
@@ -132,9 +144,10 @@ func _physics_process(delta):
 				state = States.SKID
 
 			if not is_on_floor():
+				timer_coyote_time.start()
 				state = States.FALL
 			if is_on_floor() and Input.is_action_just_pressed("Jump"):
-				target_velocity.y = jump_impulse
+				jump()
 
 			velocity = target_velocity
 			move_and_slide()
@@ -147,10 +160,12 @@ func _physics_process(delta):
 				target_velocity.x = target_velocity.x - target_velocity.x * 0.1
 				target_velocity.z = target_velocity.z - target_velocity.z * 0.1
 			
+			# TEMPORARY - SHOULD SKID INTO LEDGE GRAB
 			if not is_on_floor():
+				timer_coyote_time.start()
 				state = States.FALL
 			if is_on_floor() and Input.is_action_just_pressed("Jump"):
-				target_velocity.y = jump_impulse
+				jump()
 			
 			velocity = target_velocity
 			move_and_slide()
@@ -181,8 +196,19 @@ func _physics_process(delta):
 			move_and_slide()
 			
 			if is_on_floor():
-				if (Input.is_action_pressed("Move_Left") or Input.is_action_pressed("Move_Right") or Input.is_action_pressed("Move_Forward") or Input.is_action_pressed("Move_Backward")):
+				if timer_jump_buffer.time_left > 0:
+					jump()
+				elif (Input.is_action_pressed("Move_Left") or Input.is_action_pressed("Move_Right") or Input.is_action_pressed("Move_Forward") or Input.is_action_pressed("Move_Backward")):
 					state = States.RUN
 				else:
 					state = States.SKID
+			
+			if Input.is_action_just_pressed("Jump"):
+				if timer_coyote_time.time_left > 0:
+					jump()
+				else:
+					timer_jump_buffer.start()
+
+func jump():
+	target_velocity.y = jump_impulse
 
