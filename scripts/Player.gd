@@ -14,7 +14,7 @@ var run_accumulation = 0
 @export var run_dead_zone = 0.6
 
 var direction = Vector3.ZERO
-var stick_direction = Vector2(0,-1)
+var stick_direction = Vector2(0,1)
 var target_velocity = Vector3.ZERO
 
 @export var jump_impulse = 24
@@ -22,6 +22,8 @@ var target_velocity = Vector3.ZERO
 @onready var timer_jump_buffer = $JumpBuffer
 @export var coyote_time = 0.5
 @onready var timer_coyote_time = $CoyoteTime
+
+@onready var anim_player = $AnimationPlayer
 
 @export var camera_path : NodePath
 var camera = null
@@ -59,7 +61,7 @@ func _ready():
 
 func _physics_process(delta):
 
-	print(States.keys()[state])
+	#print(States.keys()[state])
 	#print(direction.x, direction.z)
 	#print(velocity)
 	#print(velocity.length())
@@ -68,6 +70,7 @@ func _physics_process(delta):
 
 	match state:
 		States.IDLE:
+			anim_player.play("idle")
 			direction = Vector3.ZERO
 			if (Input.is_action_pressed("Move_Left") or Input.is_action_pressed("Move_Right") or Input.is_action_pressed("Move_Forward") or Input.is_action_pressed("Move_Backward")):
 				stick_direction = Input.get_vector("Move_Left", "Move_Right", "Move_Forward", "Move_Backward")
@@ -77,11 +80,10 @@ func _physics_process(delta):
 					state = States.RUN
 			if Input.is_action_just_pressed("Jump"):
 				jump()
-			if not is_on_floor():
-				state = States.FALL
 			velocity = target_velocity
 			move_and_slide()
 		States.WALK:
+			anim_player.play("walk")
 			stick_direction = Input.get_vector("Move_Left", "Move_Right", "Move_Forward", "Move_Backward")
 			if stick_direction.x < -0.1:
 				#print("left")
@@ -105,15 +107,18 @@ func _physics_process(delta):
 				state = States.IDLE
 			elif stick_direction.length() > run_dead_zone:
 				state = States.RUN
+			
+			# TEMPORARY - SHOULD WALK INTO LEDGE GRAB
 			if Input.is_action_just_pressed("Jump"):
 				jump()
-			# TEMPORARY - SHOULD WALK INTO LEDGE GRAB
-			if not is_on_floor():
-				timer_coyote_time.start()
+			elif not is_on_floor():
 				state = States.FALL
+				timer_coyote_time.start()
+			
 			velocity = target_velocity
 			move_and_slide()
 		States.RUN:
+			anim_player.play("run")
 			run_accumulation += run_acceleration
 			var stick_vector = Input.get_vector("Move_Left", "Move_Right", "Move_Forward", "Move_Backward")
 			# turning wider at higher velocity
@@ -143,15 +148,17 @@ func _physics_process(delta):
 			if not (Input.is_action_pressed("Move_Left") or Input.is_action_pressed("Move_Right") or Input.is_action_pressed("Move_Forward") or Input.is_action_pressed("Move_Backward")):
 				state = States.SKID
 
-			if not is_on_floor():
-				timer_coyote_time.start()
-				state = States.FALL
 			if is_on_floor() and Input.is_action_just_pressed("Jump"):
 				jump()
+			elif not is_on_floor():
+				state = States.FALL
+				timer_coyote_time.start()
+
 
 			velocity = target_velocity
 			move_and_slide()
 		States.SKID:
+			anim_player.play("skid")
 			run_accumulation = 0
 			if velocity.length() < 1:
 				target_velocity = Vector3.ZERO
@@ -161,35 +168,36 @@ func _physics_process(delta):
 				target_velocity.z = target_velocity.z - target_velocity.z * 0.1
 			
 			# TEMPORARY - SHOULD SKID INTO LEDGE GRAB
-			if not is_on_floor():
-				timer_coyote_time.start()
-				state = States.FALL
 			if is_on_floor() and Input.is_action_just_pressed("Jump"):
 				jump()
+			elif not is_on_floor():
+				state = States.FALL
+				timer_coyote_time.start()
 			
 			velocity = target_velocity
 			move_and_slide()
 		States.FALL:
 			var stick_vector = Input.get_vector("Move_Left", "Move_Right", "Move_Forward", "Move_Backward")
-			# slow turn while falling
-			stick_direction = stick_direction.lerp(stick_vector, 2 * delta)
-			if stick_direction.x < -0.1:
-				#print("left")
-				direction += -cam_transform.basis[0] * -stick_direction.x
-			if stick_direction.x > 0.1:
-				#print("right")
-				direction += cam_transform.basis[0] * stick_direction.x
-			if stick_direction.y < -0.1:
-				#print("forward")
-				direction += -cam_transform.basis[2] * -stick_direction.y
-			if stick_direction.y > 0.1:
-				#print("backward")
-				direction += cam_transform.basis[2] * stick_direction.y
-			if direction != Vector3.ZERO:
-				direction = direction.normalized()
-				pivot.look_at(position + direction, Vector3.UP)
-			target_velocity.x = direction.x * (run_speed + run_accumulation)
-			target_velocity.z = direction.z * (run_speed + run_accumulation)
+			if stick_vector.length() > 0:
+				# slow turn while falling
+				stick_direction = stick_direction.lerp(stick_vector, 2 * delta)
+				if stick_direction.x < -0.1:
+					#print("left")
+					direction += -cam_transform.basis[0] * -stick_direction.x
+				if stick_direction.x > 0.1:
+					#print("right")
+					direction += cam_transform.basis[0] * stick_direction.x
+				if stick_direction.y < -0.1:
+					#print("forward")
+					direction += -cam_transform.basis[2] * -stick_direction.y
+				if stick_direction.y > 0.1:
+					#print("backward")
+					direction += cam_transform.basis[2] * stick_direction.y
+				if direction != Vector3.ZERO:
+					direction = direction.normalized()
+					pivot.look_at(position + direction, Vector3.UP)
+				target_velocity.x = direction.x * (run_speed + run_accumulation)
+				target_velocity.z = direction.z * (run_speed + run_accumulation)
 				
 			target_velocity.y = target_velocity.y - (fall_acceleration * delta)
 			velocity = target_velocity
@@ -210,5 +218,8 @@ func _physics_process(delta):
 					timer_jump_buffer.start()
 
 func jump():
+	anim_player.play("jump")
 	target_velocity.y = jump_impulse
+	timer_coyote_time.stop()
+	state = States.FALL
 
