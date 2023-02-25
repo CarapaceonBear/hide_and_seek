@@ -30,6 +30,18 @@ transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 15,
 shadow_enabled = true
 
 [node name="Player" parent="." instance=ExtResource("1_821qx")]
+walk_speed = 3
+run_speed = 4
+max_speed = 14
+run_acceleration = 0.3
+fall_acceleration = 4
+walk_dead_zone = 0.2
+run_dead_zone = 0.6
+jump_impulse = 20
+jump_buffer = 0.2
+coyote_time = 0.2
+roll_duration = 1.2
+roll_impulse = 20
 camera_path = NodePath("../CameraRig")
 
 [node name="CameraRig" type="Marker3D" parent="."]
