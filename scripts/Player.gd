@@ -37,7 +37,7 @@ var dive_number = 0
 
 @export var crouch_speed = 3
 @export var crouch_decelerate = 0.5
-@export var slide_duration = 0.8
+@export var slide_duration = 0.4
 @onready var timer_slide = $SlideDuration
 @export var slide_impulse = 16
 @export var slide_decelerate = 0.3
@@ -46,6 +46,15 @@ var dive_number = 0
 @export var drop_duration = 1
 @onready var timer_drop = $DropTimer
 @export var drop_rise = 10
+
+@export var high_jump_impulse = 32
+@export var high_jump_duration = 1
+@onready var timer_high_jump = $HighJumpTimer
+@export var long_jump_impulse = 28
+@export var long_jump_rise = 8
+
+@export var long_jump_duration = 0.8
+@onready var timer_long_jump = $LongJumpTimer
 
 @onready var anim_player = $AnimationPlayer
 
@@ -63,8 +72,8 @@ enum States {
 	CROUCH, #movement ready
 	SLIDE, #movement ready
 	DROP, #movement ready
-	HIGH_JUMP,
-	LONG_JUMP,
+	HIGH_JUMP, #movement ready
+	LONG_JUMP, #movement ready
 	SPIN,
 	GLIDE,
 	ROLL_CLIMB,
@@ -86,14 +95,24 @@ func _ready():
 	timer_slide.wait_time = slide_duration
 	timer_slide_buffer.wait_time = slide_buffer
 	timer_drop.wait_time = drop_duration
+	timer_high_jump.wait_time = high_jump_duration
+	timer_long_jump.wait_time = long_jump_duration
 
+var speedometer = Vector2.ZERO
 
 func _physics_process(delta):
 
 	#print(States.keys()[state])
 	#print(direction.x, direction.z)
+	#print(target_velocity.length())
+	#print(direction.length())
 	#print(velocity)
-	print(velocity.length())
+	#print(velocity.length())
+	#print(fall_speed)
+	
+	speedometer.x = velocity.x
+	speedometer.y = velocity.z
+	print(speedometer.length())
 	
 	var cam_transform = camera.get_global_transform()
 	
@@ -251,15 +270,7 @@ func _physics_process(delta):
 			move_and_slide()
 			
 			if is_on_floor():
-				if timer_jump_buffer.time_left > 0:
-					anim_player.stop()
-					jump()
-				elif timer_roll_buffer.time_left > 0:
-					roll()
-				elif (Input.is_action_pressed("Move_Left") or Input.is_action_pressed("Move_Right") or Input.is_action_pressed("Move_Forward") or Input.is_action_pressed("Move_Backward")):
-					state = States.RUN
-				else:
-					state = States.SKID
+				landing()
 			
 			if Input.is_action_just_pressed("Jump"):
 				if timer_coyote_time.time_left > 0:
@@ -307,11 +318,15 @@ func _physics_process(delta):
 				if is_on_floor():
 					run_accumulation = accumulation_cap - 4
 					jump()
+				elif timer_coyote_time.time_left > 0:
+					jump()
 				else:
 					timer_jump_buffer.start()
 			if is_on_floor() and timer_jump_buffer.time_left > 0:
 				run_accumulation = accumulation_cap - 4
 				jump()
+			if not is_on_floor():
+				timer_coyote_time.start()
 			
 			# chaining rolls
 			if Input.is_action_just_pressed("Roll") and timer_roll.time_left < 0.6:
@@ -330,6 +345,7 @@ func _physics_process(delta):
 					state = States.SKID
 		States.DIVE:
 			anim_player.play("dive")
+			
 			target_velocity.x = direction.x * (run_speed + run_accumulation)
 			target_velocity.z = direction.z * (run_speed + run_accumulation)
 				
@@ -389,7 +405,12 @@ func _physics_process(delta):
 			if not (Input.is_action_pressed("Move_Left") or Input.is_action_pressed("Move_Right") or Input.is_action_pressed("Move_Forward") or Input.is_action_pressed("Move_Backward")):
 				direction = Vector3.ZERO
 			
+			if Input.is_action_just_pressed("Jump"):
+				high_jump()
+			
 			if not Input.is_action_pressed("Crouch"):
+				# drop accel, otherwise tapping crouch can transition roll>run and keep all momentum
+				run_accumulation = 0
 				state = States.IDLE
 		States.SLIDE:
 			anim_player.play("slide")
@@ -423,6 +444,9 @@ func _physics_process(delta):
 			
 			run_accumulation -= slide_decelerate
 			
+			if Input.is_action_just_pressed("Jump") and stick_vector.length() > 0.6:
+				long_jump()
+			
 			if timer_slide.time_left == 0:
 				if not is_on_floor():
 					state = States.FALL
@@ -433,6 +457,7 @@ func _physics_process(delta):
 				else:
 					state = States.SKID
 		States.DROP:
+			run_accumulation = 0
 			target_velocity.x = 0
 			target_velocity.z = 0
 			target_velocity.y = target_velocity.y - (fall_speed * delta)
@@ -468,7 +493,74 @@ func _physics_process(delta):
 			if timer_drop.time_left == 0:
 				state = States.FALL
 			if is_on_floor():
-				state = States.IDLE
+				landing()
+		States.HIGH_JUMP:
+			var stick_vector = Input.get_vector("Move_Left", "Move_Right", "Move_Forward", "Move_Backward")
+			if stick_vector.length() > 0:
+				# medium turn while jumping
+				stick_direction = stick_direction.lerp(stick_vector, 3 * delta)
+				if stick_direction.x < -0.1:
+					#print("left")
+					direction += -cam_transform.basis[0] * -stick_direction.x
+				if stick_direction.x > 0.1:
+					#print("right")
+					direction += cam_transform.basis[0] * stick_direction.x
+				if stick_direction.y < -0.1:
+					#print("forward")
+					direction += -cam_transform.basis[2] * -stick_direction.y
+				if stick_direction.y > 0.1:
+					#print("backward")
+					direction += cam_transform.basis[2] * stick_direction.y
+				if direction != Vector3.ZERO:
+					direction = direction.normalized()
+					pivot.look_at(position + direction, Vector3.UP)
+				target_velocity.x = direction.x * (run_speed + run_accumulation)
+				target_velocity.z = direction.z * (run_speed + run_accumulation)
+				
+			target_velocity.y = target_velocity.y - (fall_speed * delta)
+			velocity = target_velocity
+			move_and_slide()
+			
+			if Input.is_action_just_pressed("Roll"):
+				dive()
+			
+			if is_on_floor():
+				landing()
+			
+			if timer_high_jump.time_left == 0:
+				state = States.FALL
+		States.LONG_JUMP:
+			var stick_vector = Input.get_vector("Move_Left", "Move_Right", "Move_Forward", "Move_Backward")
+			if stick_vector.length() > 0:
+				# medium turn while long-jumping
+				stick_direction = stick_direction.lerp(stick_vector, 0.8 * delta)
+				if stick_direction.x < -0.1:
+					#print("left")
+					direction += -cam_transform.basis[0] * -stick_direction.x
+				if stick_direction.x > 0.1:
+					#print("right")
+					direction += cam_transform.basis[0] * stick_direction.x
+				if stick_direction.y < -0.1:
+					#print("forward")
+					direction += -cam_transform.basis[2] * -stick_direction.y
+				if stick_direction.y > 0.1:
+					#print("backward")
+					direction += cam_transform.basis[2] * stick_direction.y
+				if direction != Vector3.ZERO:
+					direction = direction.normalized()
+					pivot.look_at(position + direction, Vector3.UP)
+				target_velocity.x = direction.x * (run_speed + run_accumulation)
+				target_velocity.z = direction.z * (run_speed + run_accumulation)
+				
+			target_velocity.y = target_velocity.y - (fall_speed * delta * 0.5)
+			velocity = target_velocity
+			move_and_slide()
+			
+			if is_on_floor():
+				landing()
+			
+			if timer_long_jump.time_left == 0:
+				state = States.FALL
 
 func jump():
 	anim_player.play("jump")
@@ -484,6 +576,9 @@ func roll():
 
 
 func dive():
+	if direction.length() < 0.1:
+		state = States.FALL
+		return
 	if dive_number > 0:
 		dive_number -= 1
 		run_accumulation = dive_speed
@@ -508,3 +603,35 @@ func drop():
 	target_velocity.y = drop_rise
 	timer_drop.start()
 	state = States.DROP
+
+
+func high_jump():
+	anim_player.play("flip")
+	timer_high_jump.start()
+	run_accumulation = 0
+	target_velocity.x = 0
+	target_velocity.z = 0
+	target_velocity.y = high_jump_impulse
+	state = States.HIGH_JUMP
+
+
+func long_jump():
+	anim_player.play("flip")
+	timer_long_jump.start()
+	run_accumulation = long_jump_impulse
+	target_velocity.y = long_jump_rise
+	state = States.LONG_JUMP
+
+
+func landing():
+	if timer_jump_buffer.time_left > 0:
+		anim_player.stop()
+		jump()
+	elif timer_roll_buffer.time_left > 0:
+		roll()
+	elif Input.is_action_pressed("Crouch"):
+		crouch()
+	elif (Input.is_action_pressed("Move_Left") or Input.is_action_pressed("Move_Right") or Input.is_action_pressed("Move_Forward") or Input.is_action_pressed("Move_Backward")):
+		state = States.RUN
+	else:
+		state = States.SKID
