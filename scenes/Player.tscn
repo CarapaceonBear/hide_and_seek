@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3 uid="uid://cndevq71svct"]
+[gd_scene load_steps=22 format=3 uid="uid://cndevq71svct"]
 
 [ext_resource type="Script" path="res://scripts/Player.gd" id="1_3wr2h"]
 
@@ -547,6 +547,122 @@ tracks/2/interp = 1
 tracks/2/loop_wrap = true
 tracks/2/keys = PackedFloat32Array(0, 1, 1, 1, 1, 1.6, 1, 1, 1, 1)
 
+[sub_resource type="Animation" id="Animation_5741l"]
+resource_name = "spin"
+length = 0.5
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Pivot/MeshInstance3D")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, 0, 1, 0, 0.5, 1, 0, 1, 0)
+tracks/1/type = "rotation_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Pivot/MeshInstance3D")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, 0, 0, 0, 1)
+tracks/2/type = "scale_3d"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Pivot/MeshInstance3D")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = PackedFloat32Array(0, 1, 1, 1, 1, 0.2, 1, 1.54461, 0.500081, 1.32995, 0.5, 1, 1, 1, 1)
+tracks/3/type = "bezier"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("Pivot/MeshInstance3D:rotation:x")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"handle_modes": PackedInt32Array(0, 0),
+"points": PackedFloat32Array(0, -0.25, 0, 0.25, 0, 0, -0.25, 0, 0.25, 0),
+"times": PackedFloat32Array(0, 0.5)
+}
+tracks/4/type = "bezier"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("Pivot/MeshInstance3D:rotation:y")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"handle_modes": PackedInt32Array(0, 0),
+"points": PackedFloat32Array(0, -0.25, 0, 0.2, 6.10564, 6.28319, -0.2, 2.41589, 0.25, 0),
+"times": PackedFloat32Array(0, 0.5)
+}
+tracks/5/type = "bezier"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("Pivot/MeshInstance3D:rotation:z")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"handle_modes": PackedInt32Array(0, 0),
+"points": PackedFloat32Array(0, -0.25, 0, 0.25, 0, 0, -0.25, 0, 0.25, 0),
+"times": PackedFloat32Array(0, 0.5)
+}
+
+[sub_resource type="Animation" id="Animation_s5cpc"]
+resource_name = "glide"
+length = 0.4
+tracks/0/type = "position_3d"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Pivot/MeshInstance3D")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = PackedFloat32Array(0, 1, 0, 1, 0, 0.4, 1, 0, 1, 0)
+tracks/1/type = "rotation_3d"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Pivot/MeshInstance3D")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = PackedFloat32Array(0, 1, 0.252078, 0, 0, 0.967707, 0.4, 1, 0.252078, 0, 0, 0.967707)
+tracks/2/type = "scale_3d"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Pivot/MeshInstance3D")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = PackedFloat32Array(0, 1, 1, 1, 1, 0.4, 1, 1, 1, 1)
+tracks/3/type = "bezier"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("Pivot/MeshInstance3D:rotation:x")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"handle_modes": PackedInt32Array(0, 0),
+"points": PackedFloat32Array(0.509654, -0.25, 0, 0.25, 0, 0.509654, -0.25, 0, 0.25, 0),
+"times": PackedFloat32Array(0, 0.4)
+}
+tracks/4/type = "bezier"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("Pivot/MeshInstance3D:rotation:y")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"handle_modes": PackedInt32Array(0, 0),
+"points": PackedFloat32Array(0, -0.25, 0, 0.25, 0, 0, -0.25, 0, 0.25, 0),
+"times": PackedFloat32Array(0, 0.4)
+}
+tracks/5/type = "bezier"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("Pivot/MeshInstance3D:rotation:z")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"handle_modes": PackedInt32Array(0, 0),
+"points": PackedFloat32Array(0, -0.25, 0, 0.25, 0, 0, -0.25, 0, 0.25, 0),
+"times": PackedFloat32Array(0, 0.4)
+}
+
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_jo4bt"]
 _data = {
 "RESET": SubResource("Animation_tw2sn"),
@@ -555,12 +671,14 @@ _data = {
 "dive": SubResource("Animation_nnjhn"),
 "drop": SubResource("Animation_4jtik"),
 "flip": SubResource("Animation_ek22w"),
+"glide": SubResource("Animation_s5cpc"),
 "idle": SubResource("Animation_raqws"),
 "jump": SubResource("Animation_k0uxv"),
 "roll": SubResource("Animation_xhw5e"),
 "run": SubResource("Animation_el1og"),
 "skid": SubResource("Animation_02yjp"),
 "slide": SubResource("Animation_bssgj"),
+"spin": SubResource("Animation_5741l"),
 "walk": SubResource("Animation_ufq76")
 }
 
@@ -570,7 +688,7 @@ script = ExtResource("1_3wr2h")
 [node name="Pivot" type="Node3D" parent="."]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Pivot"]
-transform = Transform3D(0.999606, 0, 0, 0, 0.710821, 0, 0, 0, 0.999468, 0, 1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 mesh = SubResource("CapsuleMesh_3s4og")
 surface_material_override/0 = SubResource("StandardMaterial3D_tyhj4")
 
@@ -610,14 +728,18 @@ one_shot = true
 wait_time = 0.5
 one_shot = true
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-libraries = {
-"": SubResource("AnimationLibrary_jo4bt")
-}
-
 [node name="HighJumpTimer" type="Timer" parent="."]
 wait_time = 0.6
 one_shot = true
 
 [node name="LongJumpTimer" type="Timer" parent="."]
 one_shot = true
+
+[node name="SpinTimer" type="Timer" parent="."]
+wait_time = 0.6
+one_shot = true
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_jo4bt")
+}
