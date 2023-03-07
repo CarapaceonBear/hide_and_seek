@@ -683,6 +683,7 @@ _data = {
 }
 
 [node name="Player" type="CharacterBody3D"]
+collision_layer = 2
 script = ExtResource("1_3wr2h")
 
 [node name="Pivot" type="Node3D" parent="."]
@@ -696,6 +697,19 @@ surface_material_override/0 = SubResource("StandardMaterial3D_tyhj4")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.389, -0.46113)
 mesh = SubResource("SphereMesh_ij5qg")
 skeleton = NodePath("../..")
+
+[node name="RayForward" type="RayCast3D" parent="Pivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+target_position = Vector3(0, 0, -1.5)
+hit_from_inside = true
+
+[node name="RayRight" type="RayCast3D" parent="Pivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+target_position = Vector3(1, 0, 0)
+
+[node name="RayLeft" type="RayCast3D" parent="Pivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+target_position = Vector3(-1, 0, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
@@ -737,6 +751,15 @@ one_shot = true
 
 [node name="SpinTimer" type="Timer" parent="."]
 wait_time = 0.6
+one_shot = true
+
+[node name="GrabTimer" type="Timer" parent="."]
+one_shot = true
+
+[node name="GrabDelayTimer" type="Timer" parent="."]
+one_shot = true
+
+[node name="WallJumpTimer" type="Timer" parent="."]
 one_shot = true
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]

@@ -2,69 +2,70 @@ class_name Player
 extends CharacterBody3D
 
 @onready var pivot = $Pivot
+@onready var timer_jump_buffer = $JumpBuffer
+@onready var timer_coyote_time = $CoyoteTime
+@onready var timer_roll = $RollDuration
+@onready var timer_roll_buffer = $RollBuffer
+@onready var timer_slide = $SlideDuration
+@onready var timer_slide_buffer = $SlideBuffer
+@onready var timer_drop = $DropTimer
+@onready var timer_high_jump = $HighJumpTimer
+@onready var timer_long_jump = $LongJumpTimer
+@onready var timer_spin = $SpinTimer
+@onready var timer_grab = $GrabTimer
+@onready var timer_grab_delay = $GrabDelayTimer
+@onready var timer_wall_jump = $WallJumpTimer
+@onready var anim_player = $AnimationPlayer
+@onready var ray_forward = $Pivot/RayForward
+@onready var ray_right = $Pivot/RayRight
+@onready var ray_left = $Pivot/RayLeft
 
+@export_group("Movement Basics")
 @export var walk_speed = 3
 @export var run_speed = 4
 @export var max_speed = 14
 @export var run_acceleration = 0.3
-var run_accumulation = 0
-@onready var accumulation_cap = max_speed - run_speed
 @export var fall_acceleration = 4
-var terminal_velocity = 100
-var fall_speed = 0
 @export var walk_dead_zone = 0.2
 @export var run_dead_zone = 0.6
-
-var direction = Vector3.ZERO
-var stick_direction = Vector2(0,1)
-var target_velocity = Vector3.ZERO
-
+@export_group("Jumping")
 @export var jump_impulse = 20
 @export var jump_buffer = 0.2
-@onready var timer_jump_buffer = $JumpBuffer
 @export var coyote_time = 0.2
-@onready var timer_coyote_time = $CoyoteTime
-
+@export_group("Rolling")
 @export var roll_duration = 1.2
-@onready var timer_roll = $RollDuration
 @export var roll_impulse = 20
 @export var roll_buffer = 0.2
-@onready var timer_roll_buffer = $RollBuffer
 @export var dive_speed = 30
 @export var dive_rise = 18
 @export var dive_limit = 3
-var dive_number = 0
-
+@export_group("Crouching")
 @export var crouch_speed = 3
 @export var crouch_decelerate = 0.5
 @export var slide_duration = 0.4
-@onready var timer_slide = $SlideDuration
 @export var slide_impulse = 16
 @export var slide_decelerate = 0.3
 @export var slide_buffer = 0.2
-@onready var timer_slide_buffer = $SlideBuffer
 @export var drop_duration = 1
-@onready var timer_drop = $DropTimer
 @export var drop_rise = 10
-
+@export_group("Extended Jumps")
 @export var high_jump_impulse = 32
 @export var high_jump_duration = 1
-@onready var timer_high_jump = $HighJumpTimer
 @export var long_jump_impulse = 28
 @export var long_jump_rise = 8
 @export var long_jump_duration = 0.4
-@onready var timer_long_jump = $LongJumpTimer
-
+@export_group("Spinning")
 @export var spin_duration = 0.2
-@onready var timer_spin = $SpinTimer
 @export var spin_rise = 8
 @export var spin_limit = 1
-var spin_number = 0
-
-@onready var anim_player = $AnimationPlayer
-
+@export var glide_speed = 8
+@export_group("Wall Jumps")
+@export var grab_delay = 0.4
+@export var grab_duration = 1.4
+@export var wall_jump_impulse = 6
+@export var wall_jump_duration = 0.8
+@export_group("Extras")
 @export var camera_path : NodePath
-var camera = null
 
 enum States {
 	IDLE, #movement ready
@@ -81,15 +82,28 @@ enum States {
 	LONG_JUMP, #movement ready
 	SPIN, #movement ready
 	AIR_SPIN, #movement ready
-	GLIDE,
+	GLIDE, #movement ready
 	ROLL_CLIMB,
-	WALL_GRAB,
-	WALL_JUMP,
+	WALL_GRAB, #movement ready
+	WALL_JUMP, #close
 	LEDGE_GRAB,
 	SIT
 }
 @onready var state = States.IDLE
+@onready var accumulation_cap = max_speed - run_speed
+var direction = Vector3.ZERO
+var stick_direction = Vector2(0,1)
+var target_velocity = Vector3.ZERO
+var run_accumulation = 0
+var terminal_velocity = 100
+var fall_speed = 0
+var dive_number = 0
+var spin_number = 0
+var grab_ready = true
+var camera = null
+var speedometer = Vector2.ZERO
 
+var temp = 0
 
 func _ready():
 	if camera_path:
@@ -104,12 +118,14 @@ func _ready():
 	timer_high_jump.wait_time = high_jump_duration
 	timer_long_jump.wait_time = long_jump_duration
 	timer_spin.wait_time = spin_duration
+	timer_grab.wait_time = grab_duration
+	timer_grab_delay.wait_time = grab_delay
+	timer_wall_jump.wait_time = wall_jump_duration
 
-var speedometer = Vector2.ZERO
 
 func _physics_process(delta):
 
-	print(States.keys()[state])
+	#print(States.keys()[state])
 	#print(round(direction.x), round(direction.z))
 	#print(target_velocity.length())
 	#print(direction.length())
@@ -117,12 +133,17 @@ func _physics_process(delta):
 	#print(velocity.length())
 	#print(fall_speed)
 	#print(target_velocity.y)
+	print(stick_direction)
 	
 	speedometer.x = velocity.x
 	speedometer.y = velocity.z
 	#print(speedometer.length())
 	
 	var cam_transform = camera.get_global_transform()
+	
+#	if ray_forward.is_colliding():
+#		temp += 1
+#		print(temp)
 	
 	# fall speed
 	if is_on_floor():
@@ -133,6 +154,7 @@ func _physics_process(delta):
 	if is_on_floor():
 		dive_number = dive_limit
 		spin_number = spin_limit
+		grab_ready = true
 
 	match state:
 		States.IDLE:
@@ -220,12 +242,47 @@ func _physics_process(delta):
 					jump()
 				else:
 					timer_jump_buffer.start()
-			if Input.is_action_just_pressed("Roll"):
+			if Input.is_action_just_pressed("Roll") and not ray_forward.is_colliding():
 				dive()
 			if Input.is_action_just_pressed("Crouch"):
 				drop()
 			if Input.is_action_just_pressed("Spin"):
 				air_spin()
+			if timer_grab_delay.time_left == 0 and grab_ready:
+				if ray_forward.is_colliding():
+					var col = ray_forward.get_collision_normal()
+					var temp = false
+					# TO BE TIDIED
+					if col.x > -0.2 and col.x < 0.2:
+						if col.z > 0.6 and direction.z < -0.6:
+							temp = true
+						elif col.z < -0.6 and direction.z > 0.6:
+							temp = true
+					elif col.z > -0.2 and col.z < 0.2:
+						if col.x > 0.6 and direction.x < -0.6:
+							temp = true
+						elif col.x < -0.6 and direction.x > 0.6:
+							temp = true
+					elif col.x > 0 and direction.x < 0:
+						if col.z > 0 and direction.z < 0:
+							temp = true
+						elif col.z < 0 and direction.z > 0:
+							temp = true
+					elif col.x < 0 and direction.x > 0:
+						if col.z < 0 and direction.z > 0:
+							temp = true
+						elif col.z > 0 and direction.z < 0:
+							temp = true
+					if temp:
+						wall_grab()
+				if ray_left.is_colliding() and Input.is_action_just_pressed("Spin"):
+					run_accumulation = 0
+					fall_speed = 0
+					wall_jump(cam_transform, ray_left.get_collision_normal())
+				if ray_right.is_colliding() and Input.is_action_just_pressed("Spin"):
+					run_accumulation = 0
+					fall_speed = 0
+					wall_jump(cam_transform, ray_right.get_collision_normal())
 		States.ROLL:
 			anim_player.play("roll")
 			if run_accumulation > accumulation_cap - 2:
@@ -244,8 +301,10 @@ func _physics_process(delta):
 				jump()
 			if not is_on_floor():
 				timer_coyote_time.start()
+			if ray_forward.is_colliding():
+				state = States.ROLL_CLIMB
 			# chaining rolls
-			if Input.is_action_just_pressed("Roll") and timer_roll.time_left < 0.6:
+			if is_on_floor() and Input.is_action_just_pressed("Roll") and timer_roll.time_left < 0.6:
 				roll()
 			if is_on_floor() and Input.is_action_just_pressed("Crouch"):
 				crouch()
@@ -264,6 +323,8 @@ func _physics_process(delta):
 				timer_jump_buffer.start()
 			if Input.is_action_just_pressed("Crouch"):
 				drop()
+			if ray_forward.is_colliding():
+				state = States.WALL_GRAB
 			var stick_vector = Input.get_vector("Move_Left", "Move_Right", "Move_Forward", "Move_Backward")
 			if is_on_floor():
 				if stick_vector.length() > 0:
@@ -321,6 +382,8 @@ func _physics_process(delta):
 			var stick_vector = Input.get_vector("Move_Left", "Move_Right", "Move_Forward", "Move_Backward")
 			if Input.is_action_just_pressed("Jump") and stick_vector.length() > 0.6:
 				long_jump()
+			if ray_forward.is_colliding():
+				state = States.IDLE
 			if timer_slide.time_left == 0:
 				if not is_on_floor():
 					state = States.FALL
@@ -335,6 +398,8 @@ func _physics_process(delta):
 			move(delta, cam_transform, 15, 0)
 			if Input.is_action_just_pressed("Roll"):
 				timer_roll_buffer.start()
+			if timer_drop.time_left > 0.6 and Input.is_action_just_pressed("Spin"):
+				air_spin()
 			if timer_drop.time_left < 0.5 and timer_roll_buffer.time_left > 0:
 				dive()
 			if timer_drop.time_left == 0:
@@ -355,6 +420,8 @@ func _physics_process(delta):
 			fall_speed = long_jump_rise * 2
 			move(delta, cam_transform, 0.8, (run_speed + run_accumulation))
 			dive_number = 1
+			if ray_forward.is_colliding():
+				state = States.WALL_GRAB
 			if is_on_floor():
 				landing()
 			if timer_long_jump.time_left == 0:
@@ -381,7 +448,32 @@ func _physics_process(delta):
 				if Input.is_action_pressed("Spin"):
 					state = States.GLIDE
 				else: 
+					run_accumulation = 0
 					state = States.FALL
+		States.GLIDE:
+			fall_speed = glide_speed
+			move(delta, cam_transform, 4, 10)
+			if Input.is_action_just_pressed("Roll") and not ray_forward.is_colliding():
+				dive()
+			if not Input.is_action_pressed("Spin"):
+				state = States.FALL
+			if is_on_floor():
+				state = States.IDLE
+		States.ROLL_CLIMB:
+			# temporary
+			state = States.IDLE
+		States.WALL_GRAB:
+			fall_speed = 0
+			anim_player.play("idle")
+			if Input.is_action_just_pressed("Jump"):
+				wall_jump(cam_transform, ray_forward.get_collision_normal())
+			if Input.is_action_just_pressed("Crouch") or timer_grab.time_left == 0:
+				state = States.FALL
+		States.WALL_JUMP:
+			# NEED TO SAVE NORMAL, SUBSEQUENT WALL GRABS MUST BE OPPOSITE
+			move(delta, cam_transform, 0.8, (run_speed + run_accumulation))
+			if timer_wall_jump.time_left == 0:
+				state = States.FALL
 
 
 func move(delta, cam_transform, turn_lerp, move_speed):
@@ -400,11 +492,9 @@ func move(delta, cam_transform, turn_lerp, move_speed):
 		if stick_direction.y > 0.1:
 			#print("backward")
 			direction += cam_transform.basis[2] * stick_direction.y
-
 	if direction != Vector3.ZERO:
 		direction = direction.normalized()
 		pivot.look_at(position + direction, Vector3.UP)
-
 	target_velocity.x = direction.x * move_speed
 	target_velocity.z = direction.z * move_speed
 	if not is_on_floor():
@@ -417,6 +507,7 @@ func jump():
 	anim_player.play("jump")
 	target_velocity.y = jump_impulse
 	timer_coyote_time.stop()
+	timer_grab_delay.start()
 	state = States.FALL
 
 
@@ -505,3 +596,33 @@ func air_spin():
 		run_accumulation = 2
 		target_velocity.y = spin_rise
 		state = States.AIR_SPIN
+
+
+func wall_grab():
+	run_accumulation = 0
+	target_velocity.y = 0
+	grab_ready = false
+	timer_grab.start()
+	state = States.WALL_GRAB
+
+
+func wall_jump(cam_transform, normal):
+	anim_player.play("jump")
+	direction = normal
+	run_accumulation = wall_jump_impulse
+	
+	# VERY JANKY - NEEDS FIXING
+	if direction.x < -0.1:
+		stick_direction.x = -cam_transform.basis[0].x * -direction.x
+	if direction.x > 0.1:
+		stick_direction.x = cam_transform.basis[0].x * direction.x
+	if direction.z < -0.1:
+		stick_direction.y = -cam_transform.basis[2].z * -direction.z
+	if direction.z > 0.1:
+		stick_direction.y = cam_transform.basis[2].z * direction.z
+	
+	target_velocity.y = jump_impulse
+	grab_ready = true
+	timer_grab_delay.start()
+	timer_wall_jump.start()
+	state = States.WALL_JUMP

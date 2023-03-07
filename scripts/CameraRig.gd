@@ -6,7 +6,7 @@ extends Marker3D
 @onready var cam_pivot = $CameraPivot
 @onready var camera = $CameraPivot/Camera3D
 @export var cam_lerp = 7.0
-@export var rotation_speed = 2
+@export var rotation_speed = 3
 @export var tilt_speed = 1
 @export var inverted = false
 

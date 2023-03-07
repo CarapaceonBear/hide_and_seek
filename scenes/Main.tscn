@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://bwf7it0xeuykg"]
+[gd_scene load_steps=19 format=3 uid="uid://bwf7it0xeuykg"]
 
 [ext_resource type="PackedScene" uid="uid://cndevq71svct" path="res://scenes/Player.tscn" id="1_821qx"]
 [ext_resource type="Script" path="res://scripts/CameraRig.gd" id="2_m2x14"]
@@ -12,8 +12,8 @@ albedo_color = Color(0.180392, 0.47451, 0, 1)
 [sub_resource type="BoxMesh" id="BoxMesh_rx1fc"]
 size = Vector3(60, 2, 60)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_yu158"]
-size = Vector3(5, 3.74763, 3.94921)
+[sub_resource type="BoxShape3D" id="BoxShape3D_g5etw"]
+size = Vector3(6.78136, 3.74763, 6.61075)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sqno8"]
 albedo_color = Color(0.466667, 0.270588, 0.133333, 1)
@@ -22,6 +22,9 @@ albedo_color = Color(0.466667, 0.270588, 0.133333, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_d3k8t"]
 albedo_color = Color(0.329412, 0.52549, 0, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_yu158"]
+size = Vector3(5, 3.74763, 3.94921)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ck7wr"]
 size = Vector3(5, 7.4933, 4)
@@ -75,19 +78,19 @@ target_path = NodePath("../Player")
 [node name="Camera3D" type="Camera3D" parent="CameraRig/CameraPivot"]
 transform = Transform3D(1, 0, 0, 0, 0.881394, 0.472382, 0, -0.472382, 0.881394, 0, 4.43877, 4.71657)
 
-[node name="StaticBody3D" type="StaticBody3D" parent="."]
-transform = Transform3D(1.31106, 0, 0, 0, 0.992297, 0, 0, 0, 1.57128, 0, 1.70341, 5.63003)
+[node name="StaticBody3D5" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0169146, 1.72547, 5.63586)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
-shape = SubResource("BoxShape3D_yu158")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D5"]
+shape = SubResource("BoxShape3D_g5etw")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D"]
-transform = Transform3D(4.87087, 0, 0, 0, 3.64836, 0, 0, 0, 3.9181, 0, -0.265151, 0)
+[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D5"]
+transform = Transform3D(6.42336, 0, 0, 0, 3.64836, 0, 0, 0, 6.16866, 0, -0.265151, 0)
 material_override = SubResource("StandardMaterial3D_sqno8")
 mesh = SubResource("BoxMesh_wyp88")
 
-[node name="MeshInstance3D2" type="MeshInstance3D" parent="StaticBody3D"]
-transform = Transform3D(4.94118, 0, 0, 0, 0.338681, 0, 0, 0, 3.96477, 0, 1.65671, 0)
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="StaticBody3D5"]
+transform = Transform3D(6.51608, 0, 0, 0, 0.338681, 0, 0, 0, 6.24214, 0, 1.65671, 0)
 material_override = SubResource("StandardMaterial3D_d3k8t")
 mesh = SubResource("BoxMesh_wyp88")
 
