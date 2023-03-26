@@ -2,21 +2,22 @@ class_name Player
 extends CharacterBody3D
 
 @onready var pivot = $Pivot
-@onready var timer_jump_buffer = $JumpBuffer
-@onready var timer_coyote_time = $CoyoteTime
-@onready var timer_roll = $RollDuration
-@onready var timer_roll_buffer = $RollBuffer
-@onready var timer_slide = $SlideDuration
-@onready var timer_slide_buffer = $SlideBuffer
-@onready var timer_drop = $DropTimer
-@onready var timer_high_jump = $HighJumpTimer
-@onready var timer_long_jump = $LongJumpTimer
-@onready var timer_spin = $SpinTimer
-@onready var timer_grab = $GrabTimer
-@onready var timer_grab_delay = $GrabDelayTimer
-@onready var timer_wall_jump = $WallJumpTimer
+@onready var timer_jump_buffer = $Timers/JumpBuffer
+@onready var timer_coyote_time = $Timers/CoyoteTime
+@onready var timer_roll = $Timers/RollDuration
+@onready var timer_roll_buffer = $Timers/RollBuffer
+@onready var timer_slide = $Timers/SlideDuration
+@onready var timer_slide_buffer = $Timers/SlideBuffer
+@onready var timer_drop = $Timers/DropTimer
+@onready var timer_high_jump = $Timers/HighJumpTimer
+@onready var timer_long_jump = $Timers/LongJumpTimer
+@onready var timer_spin = $Timers/SpinTimer
+@onready var timer_grab = $Timers/GrabTimer
+@onready var timer_grab_delay = $Timers/GrabDelayTimer
+@onready var timer_wall_jump = $Timers/WallJumpTimer
 @onready var anim_player = $AnimationPlayer
 @onready var ray_forward = $Pivot/RayForward
+@onready var ray_down = $Pivot/RayDown
 @onready var ray_right = $Pivot/RayRight
 @onready var ray_left = $Pivot/RayLeft
 
@@ -62,7 +63,7 @@ extends CharacterBody3D
 @export_group("Wall Jumps")
 @export var grab_delay = 0.4
 @export var grab_duration = 1.4
-@export var wall_jump_impulse = 6
+@export var wall_jump_impulse = 14
 @export var wall_jump_duration = 0.8
 @export_group("Extras")
 @export var camera_path : NodePath
@@ -103,7 +104,11 @@ var grab_ready = true
 var camera = null
 var speedometer = Vector2.ZERO
 
-var temp = 0
+@export var player_id := 1 :
+	set(id):
+		player_id = id
+		$InputSynchronizer.set_multiplayer_authority(id)
+@onready var input = $InputSynchronizer
 
 func _ready():
 	if camera_path:
@@ -124,7 +129,6 @@ func _ready():
 
 
 func _physics_process(delta):
-
 	#print(States.keys()[state])
 	#print(round(direction.x), round(direction.z))
 	#print(target_velocity.length())
@@ -140,10 +144,6 @@ func _physics_process(delta):
 	#print(speedometer.length())
 	
 	var cam_transform = camera.get_global_transform()
-	
-#	if ray_forward.is_colliding():
-#		temp += 1
-#		print(temp)
 	
 	# fall speed
 	if is_on_floor():
@@ -248,7 +248,7 @@ func _physics_process(delta):
 				drop()
 			if Input.is_action_just_pressed("Spin"):
 				air_spin()
-			if timer_grab_delay.time_left == 0 and grab_ready:
+			if grab_ready and timer_grab_delay.time_left == 0 and not ray_down.is_colliding():
 				if ray_forward.is_colliding():
 					var col = ray_forward.get_collision_normal()
 					var temp = false
@@ -472,6 +472,11 @@ func _physics_process(delta):
 		States.WALL_JUMP:
 			# NEED TO SAVE NORMAL, SUBSEQUENT WALL GRABS MUST BE OPPOSITE
 			move(delta, cam_transform, 0.8, (run_speed + run_accumulation))
+			if is_on_floor():
+				run_accumulation = 2
+				state = States.RUN
+			if grab_ready and timer_grab_delay.time_left == 0 and ray_forward.is_colliding() and not ray_down.is_colliding():
+				state = States.WALL_GRAB
 			if timer_wall_jump.time_left == 0:
 				state = States.FALL
 

@@ -1,6 +1,7 @@
-[gd_scene load_steps=22 format=3 uid="uid://cndevq71svct"]
+[gd_scene load_steps=24 format=3 uid="uid://cndevq71svct"]
 
 [ext_resource type="Script" path="res://scripts/Player.gd" id="1_3wr2h"]
+[ext_resource type="Script" path="res://scenes/InputSynchronizer.gd" id="2_a45bx"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_3s4og"]
 
@@ -682,6 +683,14 @@ _data = {
 "walk": SubResource("Animation_ufq76")
 }
 
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_ggs6g"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/sync = true
+properties/1/path = NodePath(".:player_id")
+properties/1/spawn = true
+properties/1/sync = false
+
 [node name="Player" type="CharacterBody3D"]
 collision_layer = 2
 script = ExtResource("1_3wr2h")
@@ -703,6 +712,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 target_position = Vector3(0, 0, -1.5)
 hit_from_inside = true
 
+[node name="RayDown" type="RayCast3D" parent="Pivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+target_position = Vector3(0, -3, 0)
+hit_from_inside = true
+
 [node name="RayRight" type="RayCast3D" parent="Pivot"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 target_position = Vector3(1, 0, 0)
@@ -715,54 +729,62 @@ target_position = Vector3(-1, 0, 0)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("CylinderShape3D_3vyp3")
 
-[node name="JumpBuffer" type="Timer" parent="."]
-wait_time = 0.2
-one_shot = true
-
-[node name="CoyoteTime" type="Timer" parent="."]
-wait_time = 0.2
-one_shot = true
-
-[node name="RollDuration" type="Timer" parent="."]
-wait_time = 2.0
-one_shot = true
-
-[node name="RollBuffer" type="Timer" parent="."]
-wait_time = 0.2
-one_shot = true
-
-[node name="SlideDuration" type="Timer" parent="."]
-one_shot = true
-
-[node name="SlideBuffer" type="Timer" parent="."]
-wait_time = 0.2
-one_shot = true
-
-[node name="DropTimer" type="Timer" parent="."]
-wait_time = 0.5
-one_shot = true
-
-[node name="HighJumpTimer" type="Timer" parent="."]
-wait_time = 0.6
-one_shot = true
-
-[node name="LongJumpTimer" type="Timer" parent="."]
-one_shot = true
-
-[node name="SpinTimer" type="Timer" parent="."]
-wait_time = 0.6
-one_shot = true
-
-[node name="GrabTimer" type="Timer" parent="."]
-one_shot = true
-
-[node name="GrabDelayTimer" type="Timer" parent="."]
-one_shot = true
-
-[node name="WallJumpTimer" type="Timer" parent="."]
-one_shot = true
-
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {
 "": SubResource("AnimationLibrary_jo4bt")
 }
+
+[node name="ServerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_ggs6g")
+
+[node name="Timers" type="Node" parent="."]
+
+[node name="JumpBuffer" type="Timer" parent="Timers"]
+wait_time = 0.2
+one_shot = true
+
+[node name="CoyoteTime" type="Timer" parent="Timers"]
+wait_time = 0.2
+one_shot = true
+
+[node name="RollDuration" type="Timer" parent="Timers"]
+wait_time = 2.0
+one_shot = true
+
+[node name="RollBuffer" type="Timer" parent="Timers"]
+wait_time = 0.2
+one_shot = true
+
+[node name="SlideDuration" type="Timer" parent="Timers"]
+one_shot = true
+
+[node name="SlideBuffer" type="Timer" parent="Timers"]
+wait_time = 0.2
+one_shot = true
+
+[node name="DropTimer" type="Timer" parent="Timers"]
+wait_time = 0.5
+one_shot = true
+
+[node name="HighJumpTimer" type="Timer" parent="Timers"]
+wait_time = 0.6
+one_shot = true
+
+[node name="LongJumpTimer" type="Timer" parent="Timers"]
+one_shot = true
+
+[node name="SpinTimer" type="Timer" parent="Timers"]
+wait_time = 0.6
+one_shot = true
+
+[node name="GrabTimer" type="Timer" parent="Timers"]
+one_shot = true
+
+[node name="GrabDelayTimer" type="Timer" parent="Timers"]
+one_shot = true
+
+[node name="WallJumpTimer" type="Timer" parent="Timers"]
+one_shot = true
+
+[node name="InputSynchronizer" type="MultiplayerSynchronizer" parent="."]
+script = ExtResource("2_a45bx")
