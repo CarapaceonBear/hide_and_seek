@@ -12,9 +12,14 @@ extends Marker3D
 
 var target = null
 
+
 func _ready():
+#	print(self.get_path())
+	print("player path = " + str(target_path))
 	if target_path:
 		target = get_node(target_path)
+		print("player = " + str(target))
+
 
 func _process(delta):
 	if !target:
@@ -41,8 +46,6 @@ func _process(delta):
 			rotation_x.x -= 1
 		if Input.is_action_pressed("Look_Down"):
 			rotation_x.x += 1
-	
-	
 	
 	if rotation_y != Vector3.ZERO:
 		rotation_y = rotation_y.normalized()

@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://bincli234xy44"]
+
+[ext_resource type="Script" path="res://scripts/CameraRig.gd" id="1_23wsb"]
+
+[node name="CameraRig" type="Marker3D"]
+script = ExtResource("1_23wsb")
+
+[node name="CameraPivot" type="Marker3D" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.881394, 0.472382, 0, -0.472382, 0.881394, 0, 4.43877, 4.71657)

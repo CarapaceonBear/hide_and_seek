@@ -3,7 +3,7 @@ extends Node
 const PORT = 4433
 
 func _ready():
-	get_tree().paused = true
+#	get_tree().paused = true
 	multiplayer.server_relay = false
 	
 	if DisplayServer.get_name() == "headless":
@@ -36,7 +36,7 @@ func _on_connect_pressed():
 
 
 func start_game():
-	$UI.hide()
+	$MP_UI.hide()
 	get_tree().paused = false
 	if multiplayer.is_server():
 		change_level.call_deferred(load("res://scenes/test_geo.tscn"))

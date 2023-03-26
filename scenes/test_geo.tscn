@@ -518,3 +518,9 @@ _spawnable_scenes = PackedStringArray("res://scenes/Player.tscn")
 spawn_path = NodePath("../PlayerHandler")
 
 [node name="PlayerHandler" type="Node" parent="."]
+
+[node name="CameraSpawner" type="MultiplayerSpawner" parent="."]
+_spawnable_scenes = PackedStringArray("res://scenes/camera_rig.tscn")
+spawn_path = NodePath("../CameraHandler")
+
+[node name="CameraHandler" type="Node" parent="."]

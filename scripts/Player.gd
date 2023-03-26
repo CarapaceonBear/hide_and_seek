@@ -110,9 +110,12 @@ var speedometer = Vector2.ZERO
 		$InputSynchronizer.set_multiplayer_authority(id)
 @onready var input = $InputSynchronizer
 
+
 func _ready():
+	print("cam path = " + str(camera_path))
 	if camera_path:
 		camera = get_node(camera_path)
+		print("player cam = " + str(camera))
 	timer_jump_buffer.wait_time = jump_buffer
 	timer_coyote_time.wait_time = coyote_time
 	timer_roll.wait_time = roll_duration
